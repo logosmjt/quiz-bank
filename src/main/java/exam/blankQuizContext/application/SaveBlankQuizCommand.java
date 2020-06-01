@@ -19,11 +19,13 @@ public class SaveBlankQuizCommand {
     @NotNull
     private String teacherId;
 
+    @AllArgsConstructor
     public static class Question{
         @NotNull
         private String question;
     }
 
+    @AllArgsConstructor
     public static class Answer{
         @NotNull
         private String answers;
