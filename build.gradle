@@ -1,3 +1,17 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        mavenCentral()
+    }
+    dependencies {
+        classpath('org.springframework.boot:spring-boot-gradle-plugin:2.2.6.RELEASE')
+        classpath('gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.13.0')
+    }
+}
+
+
 plugins {
     id 'org.springframework.boot' version '2.2.6.RELEASE'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
@@ -34,3 +48,25 @@ test {
     useJUnitPlatform()
 }
 
+
+//注意这部分需放在buildscript块、plugins块下面，否则出错；其他依次添加
+apply plugin: 'org.springframework.boot'
+apply plugin: 'com.palantir.docker'
+
+//这里我修改了jar包名称，因此生成的jar包名称为：esb-0.0.1.jar
+bootJar {
+    baseName = 'quiz-bank'
+    version =  '0.0.1'
+}
+
+task unpack(type: Copy) {
+    dependsOn bootJar
+    from(zipTree(tasks.bootJar.outputs.files.singleFile))
+    into("build/dependency")
+}
+docker {
+    name "${project.group}/${bootJar.baseName}"    //生成镜像的名称
+    dockerfile = file('Dockerfile')
+    copySpec.from(tasks.unpack.outputs).into("dependency")
+    buildArgs(['DEPENDENCY': "dependency"])
+}
